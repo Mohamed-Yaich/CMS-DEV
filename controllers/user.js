@@ -8,72 +8,81 @@ const user = {
         res.render('index', {user, params})
     },
 
-    updateFirstnameAndLastname: async (req, res) => {
+    updateUser: async (req, res) => {
 
-        const {firstname, lastname, user_id} = req.body;
-        const updateFirstnameAndLastname = await userData.updateUserFirstnameAndLastname(firstname, lastname, user_id);
-        return res.redirect('/');
+        const { user_id, ...updates } = req.body;
+        const userFields = Object.keys(updates); 
+    
+        // Update each field dynamically
+        for (const field of userFields) {
+            await userData.updateUserField(user_id, field, updates[field]);
+        }
+    
+        return res.redirect(`/${res.locals.user}/portfolio`);
     },
-
-    updateBiography: async (req, res) => {
-
-        const {biography, user_id} = req.body;
-        const updateBiography = await userData.updateUserBiography(biography, user_id);
-        return res.redirect('/');
-    },
+    
 
     updatePicture: async (req, res) => {
         const {user_id} = req.body;
         if (req.file){
-            const bddPath = '/img/' + req.file.filename;
+            const bddPath = '/images/' + req.file.filename;
             const updatePicture = await userData.updateUserPicture(bddPath, user_id);
-            return res.redirect('/');
+            return res.redirect(`/${res.locals.user}/portfolio`);
         }else {
-            return res.redirect('/');
+            return res.redirect(`/${res.locals.user}/portfolio`);
         }
     },
 
     addNewSkill: async (req, res) => {
         const {skill_name, skill_description, user_username} = req.body
         const addNewSkill = await userData.addUserNewSkill(skill_name, skill_description, user_username);
-        return res.redirect('/');
+        return res.redirect(`/${res.locals.user}/portfolio`);
     },
 
     updateSkill: async (req, res) => {
         const {skill_name, skill_description, user_username, skill_id} = req.body;
         const updateSkill = await userData.updateUserSkill(skill_name, skill_description, user_username, skill_id);
-        return res.redirect('/');
+        return res.redirect(`/${res.locals.user}/portfolio`);
     },
 
     addProject: async (req, res) => {
-        const {project_name, project_link, user_username} = req.body;
-        if (req.file){
-            const bddPath = '/img/' + req.file.filename;
-            const updateSkill = await userData.addUserProject(project_name, project_link, user_username, bddPath);
-            return res.redirect('/');
+        
+        let project_picture_path;
+      
+        if (req.file) {
+          project_picture_path = '/img/' + req.file.filename;
         } else {
-            const bddPath = '/img/project1.jpg';
-            const updateSkill = userData.addUserProject(project_name, project_link, user_username, bddPath);
-            return res.redirect('/');
+          project_picture_path = '/img/project1.jpg';
         }
+      
+        const { project_picture, project_user_username, ...projects } = req.body;
+      
+        await userData.addUserProject(project_picture_path, project_user_username, projects);
+      
+        return res.redirect(`/${res.locals.user}/portfolio`);
     },
+      
 
     updateProject: async (req, res) => {
-        const {project_name, project_link, project_id} = req.body;
-        if(req.file){
-            const bddPath = '/img/' + req.file.filename;
-            const updateProject = await userData.updateUserProjectWithPicture(project_name, project_link, bddPath, project_id);
-            return res.redirect('/');
-        }else{
-            const updateProject = userData.updateUserProjectWithoutPicture(project_name, project_link, project_id);
-            return res.redirect('/');
-        }
-    },
 
-    updateContact: async (req, res) => {
-        const {use_mail, use_phone, user_username} = req.body;
-        const updateContact = await userData.updateUserContact(use_mail, use_phone, user_username);
-        return res.redirect('/');
+        let project_picture_path;
+
+        const { project_picture, project_id, ...projects } = req.body;
+        
+
+        if(req.file){
+
+            project_picture_path = '/img/' + req.file.filename;
+
+            const updateProject = await userData.updateUserProjectWithPicture(project_picture_path, project_id, projects);
+
+            return res.redirect(`/${res.locals.user}/portfolio`);
+        }else{
+
+            const updateProject = userData.updateUserProjectWithoutPicture(project_id, projects);
+
+            return res.redirect(`/${res.locals.user}/portfolio`);
+        }
     },
 
 }

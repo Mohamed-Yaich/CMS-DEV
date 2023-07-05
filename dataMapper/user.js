@@ -1,37 +1,17 @@
 const client = require('../client');
 
 const user = {
-
-    updateUserFirstnameAndLastname: async (firstname, lastname, user_id) => {
-
+    
+    updateUserField: async (user_id, field, value) => {
         const query = `
-            UPDATE "user" 
-            SET user_firstname = $1, user_lastname = $2
-            WHERE user_id = $3;
+          UPDATE "user"
+          SET "${field}" = $1
+          WHERE "user_id" = $2
         `;
-        const values = [
-            firstname,
-            lastname,
-            user_id
-        ];
-
-        const update = await client.query(query, values);
-    },
-
-    updateUserBiography: async (biography, user_id) => {
-        const query = `
-            UPDATE "user" 
-            SET user_biography = $1
-            WHERE user_id = $2;
-        `;
-
-        const values = [
-            biography,
-            user_id
-        ];
-
-        const update = await client.query(query, values);
-    },
+        const values = [value, user_id];
+    
+        const result = await client.query(query, values);
+      },
 
     updateUserPicture: async (bddPath, user_id) => {
 
@@ -91,80 +71,54 @@ const user = {
         const update = await client.query(query, values);
     },
 
-    addUserProject: async (project_name, project_link, user_username, bddPath) => {
-
+    addUserProject: async (project_picture_path, project_user_username, project) => {
         const query = `
-        
-            INSERT INTO project(
-                project_name,
-                project_link,
-                project_user_username,
-                project_picture
-            )VALUES(
-                $1,
-                $2,
-                $3,
-                $4
-            )
+          INSERT INTO project(
+            project_picture,
+            project_user_username,
+            ${Object.keys(project).join(', ')}
+          )
+          VALUES (
+            $1,
+            $2,
+            ${Object.keys(project).map((_, index) => `$${index + 3}`).join(', ')}
+          )
         `;
-
-        const values = [
-            project_name,
-            project_link,
-            user_username,
-            bddPath
-        ];
-
+      
+        const values = [project_picture_path, project_user_username, ...Object.values(project)];
+      
         const addProject = await client.query(query, values);
-    },
+      },
+      
 
-    updateUserProjectWithPicture: async (project_name, project_link,  bddPath, project_id) => {
+    updateUserProjectWithPicture: async (project_picture_path, project_id, updates) => {
+        const fields = Object.keys(updates);
+        const placeholders = fields.map((field, index) => `${field} = $${index + 3}`).join(', ');
+    
         const query = `
             UPDATE project 
-            SET project_name = $1, project_link = $2, project_picture = $3
-            WHERE project.project_id = $4;
+            SET project_picture = $1, ${placeholders}
+            WHERE project_id = $2;
         `;
-
-        const values = [
-            project_name, 
-            project_link,  
-            bddPath, 
-            project_id
-        ];
-
+    
+        const values = [project_picture_path, project_id, ...Object.values(updates)];
+    
         const update = await client.query(query, values);
     },
+    
 
-    updateUserProjectWithoutPicture: async (project_name, project_link, project_id) => {
+    updateUserProjectWithoutPicture: async (project_id, projects) => {
+        const fields = Object.keys(projects);
+        const placeholders = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+    
         const query = `
-        UPDATE project 
-        SET project_name = $1, project_link = $2
-        WHERE project_id = $3;
+            UPDATE project 
+            SET ${placeholders}
+            WHERE project_id = $1;
         `;
-
-        const values = [
-            project_name, 
-            project_link,  
-            project_id
-        ];
-
-        const update = await client.query(query, values);
-    },
-
-    updateUserContact: async (use_mail, use_phone, user_username) =>  {
-
-        const query = `
-        UPDATE "user" 
-        SET user_mail = $1, user_phone = $2
-        WHERE user_username = $3;
-        `;
-
-        const values = [
-            use_mail, 
-            use_phone,  
-            user_username
-        ];
-
+    
+        const values = [project_id, ...Object.values(projects)];
+    
         const update = await client.query(query, values);
     },
 
