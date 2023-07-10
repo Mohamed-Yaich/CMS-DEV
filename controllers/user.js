@@ -1,11 +1,14 @@
 const userData = require('../dataMapper/user');
+const dataPorfolio = require('../dataMapper/portfolioData');
 
 const user = {
 
-    getIndexPage: (req, res) => {
+    getIndexPage: async (req, res) => {
         const user = "william";
         const params = "william";
-        res.render('index', {user, params})
+        const data = await dataPorfolio.getPorfolioData(params);
+        console.log(data)
+        res.render('index', {user, params, data})
     },
 
     updateUser: async (req, res) => {
